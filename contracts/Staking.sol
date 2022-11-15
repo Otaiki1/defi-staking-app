@@ -10,6 +10,9 @@ contract Staking {
 
     //a mapping of users to how mmuch they have staked
     mapping(address => uint256) public s_balances;
+    
+    //a mapping of how much each address has already been paid
+    mapping(address => uint256) public s_userRewardPerTokenPaid;
 
     //total supply
     uint256 public s_totalSupply;
@@ -20,17 +23,34 @@ contract Staking {
     modifier updateReward(address account){
         s_rewardPerTokenStored  = rewardPerToken();
         s_lastUpdateTime = block.timestamp;
+        s_rewards[account] = earned(account);
+        s_userRewardPerTokenPaid[account] = s_rewardPerTokenStored;
+
+        _;
     }
 
     constructor (address stakingToken) {
         s_stakingToken = IERC20(stakingToken);  
     }
 
+    function earned(address _account) public view returns(uint256){
+       uint256 currentBalance  = s_balances[_account];
+
+       //how much they have been paid already
+        uint256 amountPaid = s_userRewardPerTokenPaid[_account];
+        uint256 currentRewardPerToken = rewardPerToken();
+        uint256 pastRewards = s_rewards[account];
+
+        uint256 _earned = ((currentBalance * (currentRewardPerToken - amountPaid) / 1e18) +
+        pastRewards);
+        return _earned;
+    }
+
     function rewardPerToken() public view returns(uint256){
         if(s_totalSupply == 0){
             return s_rewardPerTokenStored;
         }
-        return s_rewardPerTokenStored +(((block.timestamp - s_lastUpdateTime) * REWARD_RATE * 1e18)/ s_totalSupply );
+        return s_rewardPerTokenStored +(((block.timestamp - s_lastUpdateTime) * REWARD_RATE * 1e18)/ s_totalSupply );   
     }
 
     function stake(uint256 _amount) external {
