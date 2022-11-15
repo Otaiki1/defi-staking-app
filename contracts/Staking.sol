@@ -4,6 +4,8 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 error Staking__TransferFailed();
+error Staking__NeedsMoreThanZero();
+
 
 contract Staking {
     IERC20 public s_stakingToken;
@@ -32,7 +34,13 @@ contract Staking {
 
         _;
     }
-
+    
+    modifier moreThanZero(uint256 amount){
+        if(amount == 0){
+            revert Staking__NeedsMoreThanZero();
+        }
+        _;
+    }
     constructor (address stakingToken, address rewardToken) {
         s_stakingToken = IERC20(stakingToken);  
         s_rewardToken = IERC20(rewardToken);  
@@ -58,7 +66,7 @@ contract Staking {
         return s_rewardPerTokenStored +(((block.timestamp - s_lastUpdateTime) * REWARD_RATE * 1e18)/ s_totalSupply );   
     }
 
-    function stake(uint256 _amount) updateReward(msg.sender) external {
+    function stake(uint256 _amount) updateReward(msg.sender) moreThanZero(_amount) external {
 
         s_balances[msg.sender] += _amount;
         s_totalSupply += _amount;
@@ -70,7 +78,7 @@ contract Staking {
         }
     }
 
-    function withdraw(uint256 _amount) updateReward(msg.sender) external {
+    function withdraw(uint256 _amount) updateReward(msg.sender) moreThanZero(_amount) external {
         s_balances[msg.sender] -= _amount;
         s_totalSupply -= _amount;
 
