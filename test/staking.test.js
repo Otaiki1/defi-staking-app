@@ -5,7 +5,7 @@ describe('Staking Test', async() => {
 
     beforeEach(async() => {
         const accounts = await ethers.getSigners();
-        const deployer = accounts[0];
+        deployer = accounts[0];
         await deployments.fixture(["all"]);
 
         staking = await ethers.getContract("Staking");
@@ -15,5 +15,5 @@ describe('Staking Test', async() => {
 
     })
 
-    
+
 });
