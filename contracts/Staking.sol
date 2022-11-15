@@ -7,6 +7,7 @@ error Staking__TransferFailed();
 
 contract Staking {
     IERC20 public s_stakingToken;
+    IERC20 public s_rewardToken;
 
     //a mapping of users to how mmuch they have staked
     mapping(address => uint256) public s_balances;
@@ -14,7 +15,7 @@ contract Staking {
     //a mapping of how much each address has already been paid
     mapping(address => uint256) public s_userRewardPerTokenPaid;
 
-    //a mapping of how much rewards each address has
+    //a mapping of how much rewards each address has to claim
     mapping(address => uint256) public s_rewards;
 
     //total supply
@@ -32,8 +33,9 @@ contract Staking {
         _;
     }
 
-    constructor (address stakingToken) {
+    constructor (address stakingToken, address rewardToken) {
         s_stakingToken = IERC20(stakingToken);  
+        s_rewardToken = IERC20(rewardToken);  
     }
 
     function earned(address _account) public view returns(uint256){
@@ -73,6 +75,15 @@ contract Staking {
         s_totalSupply -= _amount;
 
         bool success = s_stakingToken.transfer(msg.sender, _amount);
+        if(!success){
+            revert Staking__TransferFailed();
+        }
+    }
+
+    function claimRewards() updateReward(msg.sender) external {
+        uint256 reward = s_rewards[msg.sender];
+
+        bool success = s_rewardToken.transfer(msg.sender, reward);
         if(!success){
             revert Staking__TransferFailed();
         }
